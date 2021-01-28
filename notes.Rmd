@@ -1,0 +1,249 @@
+---
+title: "Notes -- SQL server functions"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Chapter 1
+
+#### Data types
+exact numerics - integers, decimals (precision) \newline
+
+approximate numeric values \newline
+
+Date and time data types (date: YYYY-mm-DD) \newline
+
+Character and unicode character data types \newline
+
+SQL server has other datatypes, binary, image, cursor, xml, spatial geometry, geograpy types
+
+<!-- add a column in SQL server table -->
+<!-- ALTER TABLE voters -->
+<!-- ADD last_login ____; -->
+
+<!-- datetime, datetime2 -->
+
+#### Implicit conversion
+
+SQL server converts from one type to another
+
+The developer explicitly converts the data (explicit)
+
+<!-- # GETDATE() -->
+<!-- error converting datatype varchar to numeric -->
+
+Implicit conversion between data types. Performance impact of implicit conversion. 
+
+When comparing decimals to integers, the integer value is automatically converted to a decimal (decimal has higher precedence). Otherwise, the data after the decimal point would get lost. 
+
+#### Explicit conversion
+
+Implicit - performed automatically, behind the scenes. 
+
+Explicit - performed with the functions CAST() and CONVERT()
+
+CAST(expression AS data_type [(length)])
+
+nvarchar(20)
+
+CONVERT accepts more parameters; 
+CONVERT(data_type [(length)], expression[,style])
+
+CAST() vs CONVERT(): CAST() is from the SQL standard, and CONVERT() is SQL server specific; CONVERT() is slightly better in SQL server.
+
+
+
+<!-- SELECT  -->
+<!-- 	first_name, -->
+<!-- 	last_name, -->
+<!-- 	total_votes -->
+<!-- FROM voters -->
+<!-- -- Transform the total_votes to char of length 10 -->
+<!-- WHERE CAST(total_votes AS char) LIKE '5%'; -->
+
+
+<!-- SELECT  -->
+<!-- 	email, -->
+<!--     -- Convert birthdate to varchar show it like: "Mon dd,yyyy"  -->
+<!--     CONVERT(varchar, birthdate, 107) AS birthdate -->
+<!-- FROM voters; -->
+
+<!-- SELECT  -->
+<!-- 	first_name, -->
+<!--     last_name, -->
+<!-- 	-- Convert birthdate to varchar(10) and show it as yy/mm/dd. This format corresponds to value 11 of the "style" parameter. -->
+<!-- 	CONVERT(varchar, birthdate, 11) AS birthdate, -->
+<!--     gender, -->
+<!--     country -->
+<!-- FROM voters -->
+<!-- WHERE country = 'Belgium'  -->
+<!--     -- Select only the female voters -->
+<!-- 	AND gender = 'F' -->
+<!--     -- Select only people who voted more than 20 times   -->
+<!--     AND total_votes > 20; -->
+
+
+
+### Chapter 2 - Functions that return system date and time
+
+Common mistakes when working with dates and time, inconsistent date time and formats or patterns, arithmetic operations, issues with time zones. 
+
+Time zones in SQL server: local time zone. UTC time zone (Universal Time Coordinate)
+
+Functions that return the date and time of the operating system
+
+Higher-precision - SYSDATETIME(); SYSUTCDATETIME(); SYSDATETIMEOFFSET()
+
+Lower precision - GETDATE(), GETUTCDATE(), CURRENT_TIMESTAMP
+
+Higher-precision functions example
+
+Retrieving only the date; CONVERT()
+
+CONVERT(time, )
+
+<!-- Select the local system's date, including the timezone information -->
+
+<!-- SELECT  -->
+<!-- 	SYSDATETIMEOFFSET() AS Timezone; -->
+
+
+<!-- SELECT  -->
+<!-- 	CONVERT(VARCHAR(24), SYSDATETIME(), 107) AS HighPrecision, -->
+<!-- 	CONVERT(VARCHAR(24), GETDATE(), 102) AS LowPrecision; -->
+	
+#### Functions returning date and time parts
+
+YEAR(date) returns the year from the specified date
+
+MONTH(date) 
+
+DAY(date) 
+
+DATENAME(datepart, date)
+
+DECLARE @date datetime = '2019-03-24'
+
+DATEPART() returns an integer representing the specified part of the given date
+
+DATEFROMPARTS(year, month, day)
+
+<!-- SELECT  -->
+<!-- 	first_name, -->
+<!-- 	last_name, -->
+<!--    	-- Extract the year of the first vote -->
+<!-- 	YEAR(first_vote_date)  AS first_vote_year, -->
+<!--     -- Extract the month of the first vote -->
+<!-- 	MONTH(first_vote_date) AS first_vote_month, -->
+<!--     -- Extract the day of the first vote -->
+<!-- 	DAY(first_vote_date)   AS first_vote_day -->
+<!-- FROM voters -->
+<!-- -- The year of the first vote should be greater than 2015 -->
+<!-- WHERE YEAR(first_vote_date) > 2015 -->
+<!-- -- The day should not be the first day of the month -->
+<!--   AND DAY(first_vote_date) <> 1; -->
+
+
+
+<!-- SELECT  -->
+<!-- 	first_name, -->
+<!-- 	last_name, -->
+<!-- 	first_vote_date, -->
+<!--     -- Select the number of the day within the year -->
+<!-- 	DATENAME(dayofyear, first_vote_date) AS first_vote_dayofyear -->
+<!-- FROM voters; -->
+
+
+<!-- SELECT  -->
+<!-- 	first_name, -->
+<!-- 	last_name, -->
+<!--    	-- Extract the month number of the first vote -->
+<!-- 	DATEPART(MONTH,first_vote_date) AS first_vote_month1, -->
+<!-- 	-- Extract the month name of the first vote -->
+<!--     DATENAME(MONTH,first_vote_date) AS first_vote_month2, -->
+<!-- 	-- Extract the weekday number of the first vote -->
+<!-- 	DATEPART(WEEKDAY,first_vote_date) AS first_vote_weekday1, -->
+<!--     -- Extract the weekday name of the first vote -->
+<!-- 	DATENAME(WEEKDAY,first_vote_date) AS first_vote_weekday2 -->
+<!-- FROM voters; -->
+
+#### Performing arithmetics operations on dates
+
+DATEADD(datepart, number, date), 
+
+DATEDIFF(datepart, startdate, enddate),
+
+Arithmetic operations
+
+DECLARE @date1 datetime = '2019-01-01';
+
+#### Validating if an expression is a date
+
+ISDATE()
+
+date, time, datetime gives 1
+datetime2 gives 0
+other type gives 0
+
+<!-- SET DATEFORMAT {format} -->
+
+mdy, dmy, ymd, ydm, myd
+
+SET DATEFORMAT dmy;
+
+<!-- SET LANGUAGE {language} -->
+English, Italian, Spanish
+SET LANGUAGE English; (mdy)
+
+<!-- DECLARE @date1 NVARCHAR(20) = '15/2019/4'; -->
+
+<!-- -- Set the date format and check if the variable is a date -->
+<!-- SET DATEFORMAT dym; -->
+<!-- SELECT ISDATE(@date1) AS result; -->
+
+
+<!-- DECLARE @date1 NVARCHAR(20) = '30.03.2019'; -->
+
+<!-- -- Set the correct language -->
+<!-- SET LANGUAGE Dutch; -->
+<!-- SELECT -->
+<!-- 	@date1 AS initial_date, -->
+<!--     -- Check that the date is valid -->
+<!-- 	ISDATE(@date1) AS is_valid, -->
+<!--     -- Select the name of the month -->
+<!-- 	DATENAME(month, @date1) AS month_name; -->
+
+
+
+<!-- DECLARE @date1 NVARCHAR(20) = '12/18/55'; -->
+
+<!-- -- Set the correct language -->
+<!-- SET LANGUAGE English; -->
+<!-- SELECT -->
+<!-- 	@date1 AS initial_date, -->
+<!--     -- Check that the date is valid -->
+<!-- 	ISDATE(@date1) AS is_valid, -->
+<!--     -- Select the week day name -->
+<!-- 	DATENAME(weekday, @date1) AS week_day, -->
+<!-- 	-- Extract the year from the date -->
+<!-- 	YEAR(@date1) AS year_name; -->
+
+
+
+<!-- SELECT -->
+<!-- 	first_name, -->
+<!--     last_name, -->
+<!--     birthdate, -->
+<!-- 	first_vote_date, -->
+<!-- 	-- Find out on which day of the week each participant voted  -->
+<!-- 	DATENAME(weekday, first_vote_date) AS first_vote_weekday, -->
+<!-- 	-- Find out the year of the first vote -->
+<!-- 	YEAR(first_vote_date) AS first_vote_year, -->
+<!-- 	-- Discover the participants' age when they joined the contest -->
+<!-- 	DATEDIFF(YEAR, birthdate, first_vote_date) AS age_at_first_vote,	 -->
+<!-- 	-- Calculate the current age of each voter -->
+<!-- 	DATEDIFF(YEAR, birthdate, GETDATE()) AS current_age -->
+<!-- FROM voters; -->
