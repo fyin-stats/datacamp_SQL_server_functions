@@ -247,3 +247,229 @@ SET LANGUAGE English; (mdy)
 <!-- 	-- Calculate the current age of each voter -->
 <!-- 	DATEDIFF(YEAR, birthdate, GETDATE()) AS current_age -->
 <!-- FROM voters; -->
+
+
+
+### Chapter 3 - Working with Strings
+
+
+#### Functions for positions
+Position functions
+
+LEN(): returns the number of characters of the provided string (including the space at the end of strings)
+CHARINDEX(expression_to_find, expression_to_find, [, start location]): looks for a character expression in a given string, returns its starting position
+PATINDEX(), similar to CHARINDEX, 
+
+\begin{itemize}
+\item match any string of any length \%
+\item match on a single character "_", 
+\item [] match on any character in the [] brackets (for example, [abc] would match on a, b, or c characters)
+\end{itemize}
+
+#### Functions for string transformation
+
+LOWER(): converts everything to lower
+UPPER(): converts everything to upper
+
+LEFT(): example, LEFT(country, 3)
+RIGHT(): example, RIGHT(email, 4)
+
+LTRIM(): returns a string after removing the leading blanks
+RTRIM(): returns a string after removing the trailing blanks
+TRIM(): returns a string after removing the blanks or other specified characters
+REPLACE(): returns a string where all occurences of an expression are replaced with another one, SELECT REPLACE('I like apples, apples are good.', 'apple', 'orange') AS result;
+
+SUBSTRING(char expression, start, number of characters), returns part of a string
+
+
+<!-- SELECT  -->
+<!-- 	company, -->
+<!-- 	bean_type, -->
+<!-- 	broad_bean_origin, -->
+<!--     -- 'company' and 'broad_bean_origin' should be in uppercase -->
+<!-- 	'The company ' +  UPPER(company) + ' uses beans of type "' + bean_type + '", originating from ' + UPPER(broad_bean_origin) + '.' -->
+<!-- FROM ratings -->
+<!-- WHERE  -->
+<!--     -- The 'broad_bean_origin' should not be unknown -->
+<!-- 	LOWER(broad_bean_origin) NOT LIKE '%unknown%' -->
+<!--      -- The 'bean_type' should not be unknown -->
+<!--     AND LOWER(bean_type) NOT LIKE '%unknown%'; -->
+
+<!-- SELECT  -->
+<!-- 	first_name, -->
+<!-- 	last_name, -->
+<!-- 	country, -->
+<!--     -- Select only the first 3 characters from the first name -->
+<!-- 	LEFT(first_name, 3) AS part1, -->
+<!--     -- Select only the last 3 characters from the last name -->
+<!--     RIGHT(last_name, 3) AS part2, -->
+<!--     -- Select only the last 2 digits from the birth date -->
+<!--     RIGHT(birthdate, 2) AS part3, -->
+<!--     -- Create the alias for each voter -->
+<!--     LEFT(first_name, 3) + RIGHT(last_name, 3) + '_' + RIGHT(birthdate, 2)  -->
+<!-- FROM voters; -->
+
+#### Functions manipulating groups of strings
+
+CONCAT(), 
+
+CONCAT_WS(), concatenate with separator
+
+advantage compared to "+", CONCAT() can accommodate all data types
+
+STRING_AGG() with Group by, with the optional <order_clause>
+
+WITHIN GROUP (ORDER BY first_name ASC) AS 
+
+STRING_SPLIT(string, separator)
+
+<!-- SELECT -->
+<!-- 	-- Create a list with all bean origins, delimited by comma -->
+<!-- 	STRING_AGG(bean_origin, ',') AS bean_origins -->
+<!-- FROM ratings -->
+<!-- WHERE company IN ('Bar Au Chocolat', 'Chocolate Con Amor', 'East Van Roasters'); -->
+
+
+
+<!-- SELECT  -->
+<!-- 	company, --
+<!-- DECLARE @phrase NVARCHAR(MAX) = 'In the morning I brush my teeth. In the afternoon I take a nap. In the evening I watch TV.' -->
+
+<!-- SELECT value -->
+<!-- FROM STRING_SPLIT(@phrase, ' '); -->>
+<!--     -- Create a list with all bean origins ordered alphabetically -->
+<!-- 	STRING_AGG(bean_origin, ',') WITHIN GROUP (ORDER BY bean_origin ASC) AS bean_origins -->
+<!-- FROM ratings -->
+<!-- WHERE company IN ('Bar Au Chocolat', 'Chocolate Con Amor', 'East Van Roasters') -->
+<!-- -- Specify the columns used for grouping your data -->
+<!-- GROUP BY company; -->
+
+<!-- SELECT -->
+<!--     -- Concatenate the first and last name -->
+<!-- 	CONCAT('***' , first_name, ' ', UPPER(last_name), '***') AS name, -->
+<!--     -- Mask the last two digits of the year -->
+<!--     REPLACE(birthdate, SUBSTRING(CAST(birthdate AS varchar), 3, 2), 'XX') AS birthdate, -->
+<!-- 	email, -->
+<!-- 	country -->
+<!-- FROM voters -->
+<!--    -- Select only voters with a first name less than 5 characters -->
+<!-- WHERE LEN(first_name) < 5 -->
+<!--    -- Look for this pattern in the email address: "j%[0-9]@yahoo.com" -->
+<!-- 	AND PATINDEX('j_a%@yahoo.com', email) > 0;    -->
+
+
+
+### Chapter 4 - Recognize numeric data types
+
+#### Aggregate arithmetic functions
+COUNT(); returns of items in a group, [ALL] expression, DISTINCT expression, *
+
+DISTINCT counts the number of unique values
+* gives the number of all rows
+
+SUM([ALL]  expression)
+SUM(DISTINCT expression)
+
+MAX()
+MIN()
+
+AVG()
+GROUP BY company;
+
+<!-- SELECT  -->
+<!-- 	company, -->
+<!-- 	-- Calculate the average cocoa percent -->
+<!-- 	AVG(cocoa_percent) AS avg_cocoa, -->
+<!-- 	-- Calculate the minimum rating received by each company -->
+<!-- 	MIN(rating) AS min_rating, -->
+<!-- 	-- Calculate the maximum rating received by each company -->
+<!-- 	MAX(rating) AS max_rating -->
+<!-- FROM ratings -->
+<!-- GROUP BY company -->
+<!-- -- Order the values by the maximum rating -->
+<!-- ORDER BY MAX(rating) DESC; -->
+
+#### Analytic functions
+
+apply to each row, instead of a group
+
+FIRST_VALUE() OVER (PARTITION BY column ORDER BY column ROW_or_RANGE frame)
+
+LAST_VALUE()
+
+ROWS BETWEEN UNBOUNDED AND UNBOUNDED FOLLOWING 
+
+
+LAG() AND LEAD(), accesses data from a previous row in the same result set
+
+LAG() first one NULL
+LEAD() last one NULL
+
+
+<!-- SELECT  -->
+<!-- 	first_name, -->
+<!-- 	last_name, -->
+<!-- 	total_votes AS votes, -->
+<!--     -- Select the number of votes of the next voter -->
+<!-- 	LEAD(total_votes) OVER (ORDER BY total_votes) AS votes_next_voter, -->
+<!--     -- Calculate the difference between the number of votes -->
+<!-- 	LEAD(total_votes) OVER (ORDER BY total_votes) - total_votes AS votes_diff -->
+<!-- FROM voters -->
+<!-- WHERE country = 'France' -->
+<!-- ORDER BY total_votes; -->
+
+<!-- SELECT  -->
+<!-- 	broad_bean_origin AS bean_origin, -->
+<!-- 	rating, -->
+<!-- 	cocoa_percent, -->
+<!--     -- Retrieve the cocoa % of the bar with the previous rating -->
+<!-- 	LAG(cocoa_percent)  -->
+<!-- 		OVER(PARTITION BY broad_bean_origin ORDER BY rating) AS percent_lower_rating -->
+<!-- FROM ratings -->
+<!-- WHERE company = 'Fruition' -->
+<!-- ORDER BY broad_bean_origin, rating ASC; -->
+
+
+<!-- SELECT  -->
+<!-- 	first_name + ' ' + last_name AS name, -->
+<!-- 	country, -->
+<!-- 	birthdate, -->
+<!-- 	-- Retrieve the birthdate of the oldest voter per country -->
+<!-- 	FIRST_VALUE(birthdate)  -->
+<!-- 	OVER (PARTITION BY country ORDER BY birthdate ASC) AS oldest_voter, -->
+<!-- 	-- Retrieve the birthdate of the youngest voter per country -->
+<!-- 	LAST_VALUE(birthdate)  -->
+<!-- 		OVER (PARTITION BY country ORDER BY birthdate ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING -->
+<!-- 				) AS youngest_voter -->
+<!-- FROM voters -->
+<!-- WHERE country IN ('Spain', 'USA'); -->
+
+#### Mathematical functions
+ABS()
+
+SIGN()
+
+Rounding functions
+
+CEILING()
+FLOOR()
+ROUND(73.715, 2)
+
+POWER(numeric_expression, power)
+
+SQUARE(numeric_expression)
+
+SQRT(numeric_expression) 
+
+
+<!-- DECLARE @number1 DECIMAL(18,2) = -5.4; -->
+<!-- DECLARE @number2 DECIMAL(18,2) = 7.89; -->
+<!-- DECLARE @number3 DECIMAL(18,2) = 13.2; -->
+<!-- DECLARE @number4 DECIMAL(18,2) = 0.003; -->
+
+<!-- DECLARE @result DECIMAL(18,2) = @number1 * @number2 - @number3 - @number4; -->
+<!-- SELECT  -->
+<!-- 	@result AS result, -->
+<!--     -- Show the absolute value of the result -->
+<!-- 	ABS(@result) AS abs_result; -->
+
